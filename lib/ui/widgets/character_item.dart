@@ -46,12 +46,17 @@ class CharacterItem extends StatelessWidget {
             ),
             child: Container(
               color: MyColors.myGrey,
-              child: character.image!.isNotEmpty
+              child: character.image == null || character.image!.isNotEmpty
                   ? FadeInImage.assetNetwork(
                       width: double.infinity,
                       placeholder: 'assets/images/loading_animation.gif',
                       image: character.image!,
                       fit: BoxFit.cover,
+                      imageErrorBuilder: (context, error, stackTrace) =>
+                          Image.asset(
+                        'assets/images/image_placeholder.png',
+                        fit: BoxFit.contain,
+                      ),
                     )
                   : Image.asset(
                       'assets/images/image_placeholder.png',

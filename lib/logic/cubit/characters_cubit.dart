@@ -10,10 +10,7 @@ class CharactersCubit extends Cubit<CharactersState> {
   List<CharactersModel> characters = [];
   CharactersRepo charactersRepo;
 
-  CharactersCubit(this.charactersRepo) : super(CharactersInitial()) {
-    getAllCharacters();
-  }
-
+  CharactersCubit(this.charactersRepo) : super(CharactersInitial());
   List<CharactersModel> getAllCharacters() {
     charactersRepo.getAllCharacters().then(
       (characters) {

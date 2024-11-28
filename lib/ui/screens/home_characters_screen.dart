@@ -1,8 +1,12 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:train_use_bloc_app/core/app_colors.dart';
 import 'package:train_use_bloc_app/data/models/characters_model.dart';
 import 'package:train_use_bloc_app/logic/cubit/characters_cubit.dart';
+import 'package:train_use_bloc_app/ui/screens/widgets/body_widgets.dart';
 import 'package:train_use_bloc_app/ui/widgets/character_item.dart';
 
 class HomeCharactersScreen extends StatefulWidget {
@@ -13,21 +17,39 @@ class HomeCharactersScreen extends StatefulWidget {
 }
 
 class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
-  late List<CharactersModel> allCharacters;
+  List<CharactersModel> allCharacters = [];
   late List<CharactersModel> searchedForCharacters;
   bool _isSearching = false;
   final _searchTextController = TextEditingController();
 
+  //*-------------
+  //! No internet Function
+
+  bool _isInternetConnect = false;
+
+  //*------------
+
   @override
   void initState() {
     super.initState();
+
     allCharacters =
         BlocProvider.of<CharactersCubit>(context).getAllCharacters();
+
+    StreamSubscription<List<ConnectivityResult>> _listenToNetworkStatus =
+        Connectivity()
+            .onConnectivityChanged
+            .listen((List<ConnectivityResult> result) {
+      setState(() {
+        _isInternetConnect = !result.contains(ConnectivityResult.none);
+      print('Connectivity changed: $result');
+      });
+      // ignore: avoid_print
+    });
   }
 
   //*--------------
   //? App Bar Functions
-  //*--------------
 
   Widget _buildSearchField() {
     return TextField(
@@ -51,6 +73,19 @@ class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
             character.name!.toLowerCase().startsWith(searchedCharacter))
         .toList();
     setState(() {});
+  }
+
+  Widget buildLoadedListWidgets() {
+    return SingleChildScrollView(
+      child: Container(
+        color: MyColors.myGrey,
+        child: Column(
+          children: [
+            buildCharacterList(),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> _buildAppBarActions() {
@@ -99,11 +134,10 @@ class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
       _searchTextController.clear();
     });
   }
+  //*--------------
 
   //*--------------
   //? Body Functions
-  //*--------------
-
   Widget buildBlocWidget() {
     return BlocBuilder<CharactersCubit, CharactersState>(
       builder: (context, state) {
@@ -114,27 +148,6 @@ class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
           return showLoadingIndicator();
         }
       },
-    );
-  }
-
-  Widget showLoadingIndicator() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: MyColors.myYellow,
-      ),
-    );
-  }
-
-  Widget buildLoadedListWidgets() {
-    return SingleChildScrollView(
-      child: Container(
-        color: MyColors.myGrey,
-        child: Column(
-          children: [
-            buildCharacterList(),
-          ],
-        ),
-      ),
     );
   }
 
@@ -161,12 +174,7 @@ class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
     );
   }
 
-  Widget _buildAppBarTitle() {
-    return const Text(
-      'Characters',
-      style: TextStyle(color: MyColors.myGrey),
-    );
-  }
+  //*--------------
 
   @override
   Widget build(BuildContext context) {
@@ -178,11 +186,10 @@ class _HomeCharactersScreenState extends State<HomeCharactersScreen> {
                 color: MyColors.myGrey,
               )
             : Container(),
-        title: _isSearching ? _buildSearchField() : _buildAppBarTitle(),
+        title: _isSearching ? _buildSearchField() : buildAppBarTitle(),
         actions: _buildAppBarActions(),
       ),
-      // floatingActionButton: FloatingActionButton(onPressed: () {}),
-      body: buildBlocWidget(),
+      body: _isInternetConnect ? buildBlocWidget() : buildNoInternetWidget(),
     );
   }
 }
